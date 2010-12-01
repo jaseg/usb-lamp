@@ -1,0 +1,3 @@
+[submodule "BUZ2"]
+	path = BUZ2
+	url = //home/jaseg/dev/avr/src/RGBulb2/BUZ2 Slave
