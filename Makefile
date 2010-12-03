@@ -52,7 +52,7 @@ TARGET = main
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c
+SRC = $(TARGET).c BUZ2/buz2.c BUZ2/uart.c
 
 
 # List Assembler source files here.
