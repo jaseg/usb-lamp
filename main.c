@@ -35,12 +35,27 @@
  * 
  */
 
+#include "main.h"
 #include "buz2.h"
 #include <avr/interrupt.h>
 #include <stdlib.h>
 
 volatile uint8_t timer0_ovf = 0;
 volatile uint8_t timer0_pwm_high = 0;
+volatile uint16_t blink = 0;
+volatile uint8_t timeout_counter = 0;
+
+void reset_timeout(statestruct* state){
+	state->timeout_counter = 1;
+}
+
+void transmission_sent(statestruct* state){
+	//### ignore this for now.
+}
+
+void handle_error(statestruct* state, uint8_t error_code){
+	blink = 0xFFFF;
+}
 
 void handle_command(statestruct* state, command* cmd){
 	if(cmd->function == 0x00){ //default device function
@@ -132,6 +147,16 @@ ISR(TIMER0_OVF_vect){
 	}
 	if(timer0_ovf == 0){
 		disable_timer2();
+	}
+	if(blink > 0){
+		blink--;
+	}else{
+		PORTC &= 0xFE;
+	}
+	UART_statestruct->timeout_counter--;
+	if(UART_statestruct->timeout_counter == 0){
+		timeout_event(UART_statestruct);
+		UART_statestruct->timeout_counter = 8;
 	}
 }
 

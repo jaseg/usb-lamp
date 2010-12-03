@@ -31,7 +31,6 @@ void update_timers(void);
 void set_channel(uint8_t channel, uint16_t value);
 void set_channels(uint16_t c0, uint16_t c1, uint16_t c2);
 void clock_init(void);
-void transmission_sent(statestruct* state);
 //void handle_error(statestruct* state, uint8_t error_code);
 //void handle_command(statestruct* state, command* cmd);
 
