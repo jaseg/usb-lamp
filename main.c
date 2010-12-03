@@ -39,6 +39,7 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include <avr/pgmspace.h>
 
 volatile uint8_t timer0_ovf = 0;
 volatile uint8_t timer0_pwm_high = 0;
@@ -90,18 +91,16 @@ void update_timers(){
 }
 
 void set_channel(uint8_t channel, uint16_t value){
-	c16 tmp;
 	switch(channel){
 		case 0:
-			OCR1A = value;
+			OCR1A = pgm_read_word(log_pwm_lut+value);
 			break;
 		case 1:
-			OCR1B = value;
+			OCR1B = pgm_read_word(log_pwm_lut+value);
 			break;
 		case 2:
-			tmp.i16 = value;
-			OCR2 = tmp.i8l;
-			timer0_pwm_high = tmp.i8h;
+			OCR2 = pgm_read_byte((uint8_t*)(log_pwm_mod_lut+value));
+			timer0_pwm_high = pgm_read_byte((uint8_t*)(log_pwm_mod_lut+value)+1);
 			break;
 	}
 	update_timers();
@@ -109,14 +108,12 @@ void set_channel(uint8_t channel, uint16_t value){
 
 void set_channels(uint16_t c0, uint16_t c1, uint16_t c2){
 	//channel 0
-	OCR1A = c0;
+	OCR1A = pgm_read_word(log_pwm_lut+c0);
 	//channel 1
-	OCR1B = c1;
+	OCR1B = pgm_read_word(log_pwm_lut+c1);
 	//channel 2
-	c16 tmp;
-	tmp.i16 = c2;
-	OCR2 = tmp.i8l;
-	timer0_pwm_high = tmp.i8h;
+	OCR2 = pgm_read_byte((uint8_t*)(log_pwm_mod_lut+c2));
+	timer0_pwm_high = pgm_read_byte((uint8_t*)(log_pwm_mod_lut+c2)+1);
 	//update.
 	update_timers();
 }
@@ -128,21 +125,21 @@ int main(void){
 	while(1){
 		set_channels(0, 0, 0);
 		_delay_ms(1000);
-		set_channels(0xFFFF, 0xFFFF, 0xFFFF);
+		set_channels(0xFFF, 0xFFF, 0xFFF);
 		_delay_ms(1000);
-		set_channels(0x8888, 0x8888, 0x8888);
+		set_channels(0x888, 0x888, 0x888);
 		_delay_ms(1000);
-		set_channels(0xFFFF, 0, 0);
+		set_channels(0xFFF, 0, 0);
 		_delay_ms(1000);
-		set_channels(0, 0xFFFF, 0);
+		set_channels(0, 0xFFF, 0);
 		_delay_ms(1000);
-		set_channels(0, 0, 0xFFFF);
+		set_channels(0, 0, 0xFFF);
 		_delay_ms(1000);
-		set_channels(0xFFFF, 0xFFFF, 0);
+		set_channels(0xFFF, 0xFFF, 0);
 		_delay_ms(1000);
-		set_channels(0, 0xFFFF, 0xFFFF);
+		set_channels(0, 0xFFF, 0xFFF);
 		_delay_ms(1000);
-		set_channels(0xFFFF, 0, 0xFFFF);
+		set_channels(0xFFF, 0, 0xFFF);
 		_delay_ms(1000);
 	}
 }

@@ -271,19 +271,19 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 
-rx1: CFLAGS += -DRX1=1
+#rx1: CFLAGS += -DRX1=1
 
-rx2: CFLAGS += -DRX2=1
+#rx2: CFLAGS += -DRX2=1
 
-rx1: clean all rename_rx1
+#rx1: clean all rename_rx1
 
-rx2: clean all rename_rx2
+#rx2: clean all rename_rx2
 
-rename_rx1:
-	cp main.hex rx1.hex
+#rename_rx1:
+#	cp main.hex rx1.hex
 
-rename_rx2:
-	cp main.hex rx2.hex
+#rename_rx2:
+#	cp main.hex rx2.hex
 
 
 # Default target.

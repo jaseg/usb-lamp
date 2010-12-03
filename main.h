@@ -22,6 +22,8 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 #include <avr/io.h>
+#include "pwm_log_lut.h"
+#include "pwm_comp_lut.h"
 
 void init_pwm(void);
 void enable_timer2(void);
