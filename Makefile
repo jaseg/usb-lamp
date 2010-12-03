@@ -52,7 +52,7 @@ TARGET = main
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c BUZ2/buz2.c BUZ2/uart.c
+SRC = $(TARGET).c
 
 
 # List Assembler source files here.
@@ -79,7 +79,7 @@ DEBUG = dwarf-2
 
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
-EXTRAINCDIRS = BUZ2
+EXTRAINCDIRS = 
 
 
 # Compiler flag to set the C Standard level.

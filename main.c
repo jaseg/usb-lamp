@@ -36,79 +36,12 @@
  */
 
 #include "main.h"
-#include "buz2.h"
 #include <avr/interrupt.h>
 #include <stdlib.h>
+#include <util/delay.h>
 
 volatile uint8_t timer0_ovf = 0;
 volatile uint8_t timer0_pwm_high = 0;
-volatile uint16_t blink = 0;
-volatile uint8_t timeout_counter = 0;
-
-void reset_timeout(statestruct* state){
-	state->timeout_counter = 1;
-}
-
-void transmission_sent(statestruct* state){
-	//### ignore this for now.
-}
-
-void handle_error(statestruct* state, uint8_t error_code){
-	blink = 0xFFFF;
-}
-
-void handle_command(statestruct* state, command* cmd){
-	if(cmd->function == 0x00){ //default device function
-		transmission* tmp1 = malloc(sizeof(transmission));
-		c16 c0, c1, c2;
-		uint8_t* channelbuf = malloc(sizeof(uint8_t)*6);
-		switch(cmd->command){
-			case 0x00: //nop/return
-				//Ignore. We don't send commands on our own.
-				break;
-			case 0x01: //ping
-				tmp1->destination.i16 = cmd->sender;
-				tmp1->function = 0x00;
-				tmp1->command = 0x00; //return
-				tmp1->payload = 0;
-				tmp1->payload_length = 0;
-				tmp1->retry_count = 0;
-				enqueue_transmission(state, tmp1);
-				break;
-			case 0x02: //get channels
-				channelbuf[0]=OCR1AH;
-				channelbuf[1]=OCR1AL;
-				channelbuf[2]=OCR1BH;
-				channelbuf[3]=OCR1BL;
-				c16 bval;
-				bval.i16 = timer0_pwm_high*OCR2; //Magic! btw, FIXME does this even work? (8bit*8bit->16bit?)
-				channelbuf[4]=bval.i8h;
-				channelbuf[5]=bval.i8l;
-				tmp1->destination.i16 = cmd->sender;
-				tmp1->function = 0x00;
-				tmp1->command = 0x00; //return
-				tmp1->payload = channelbuf;
-				tmp1->payload_length = 6;
-				tmp1->retry_count = 0;
-				enqueue_transmission(state, tmp1);
-				break;
-			case 0x03: //set brightness/channel
-				c1.i8h = cmd->payload[1];
-				c1.i8l = cmd->payload[2];
-				set_channel(cmd->payload[0], c1.i16);
-				break;
-			case 0x04: //set channels
-				c0.i8h = cmd->payload[0];
-				c0.i8l = cmd->payload[1];
-				c1.i8h = cmd->payload[2];
-				c1.i8l = cmd->payload[3];
-				c2.i8h = cmd->payload[4];
-				c2.i8l = cmd->payload[5];
-				set_channels(c0.i16, c1.i16, c2.i16);
-				break;
-		}
-	}
-}
 
 //Two channels of 16-bit PWM are provided by timer 1 hardware, the third channel is hacked together using timer 0 and timer 2.
 void init_pwm(){
@@ -147,16 +80,6 @@ ISR(TIMER0_OVF_vect){
 	}
 	if(timer0_ovf == 0){
 		disable_timer2();
-	}
-	if(blink > 0){
-		blink--;
-	}else{
-		PORTC &= 0xFE;
-	}
-	UART_statestruct->timeout_counter--;
-	if(UART_statestruct->timeout_counter == 0){
-		timeout_event(UART_statestruct);
-		UART_statestruct->timeout_counter = 8;
 	}
 }
 
@@ -201,9 +124,25 @@ void set_channels(uint16_t c0, uint16_t c1, uint16_t c2){
 int main(void){
 	//Well, eh, do something cool!
 	DDRC |= 0x01;
-	statestruct* state = init_state();
 	init_pwm();
 	while(1){
-		transition(state);
+		set_channels(0, 0, 0);
+		_delay_ms(1000);
+		set_channels(0xFFFF, 0xFFFF, 0xFFFF);
+		_delay_ms(1000);
+		set_channels(0x8888, 0x8888, 0x8888);
+		_delay_ms(1000);
+		set_channels(0xFFFF, 0, 0);
+		_delay_ms(1000);
+		set_channels(0, 0xFFFF, 0);
+		_delay_ms(1000);
+		set_channels(0, 0, 0xFFFF);
+		_delay_ms(1000);
+		set_channels(0xFFFF, 0xFFFF, 0);
+		_delay_ms(1000);
+		set_channels(0, 0xFFFF, 0xFFFF);
+		_delay_ms(1000);
+		set_channels(0xFFFF, 0, 0xFFFF);
+		_delay_ms(1000);
 	}
 }
