@@ -38,6 +38,8 @@
 #include "main.h"
 #include <avr/interrupt.h>
 #include <stdlib.h>
+#define F_OSC 16000000
+#define F_CPU 16000000
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 
@@ -54,13 +56,17 @@ void init_pwm(){
 	DDRB   |= 0x06; //Set two output pins (PB1, PB2)
 	//8-bit timer 0
 	TCCR0  |= (1<<CS02); //Prescaler 256 (one timer 2 overflow)
-	TIMSK  |= (1<<TOIE0); //Enable overflow interrupt
+	//TIMSK  |= (1<<TOIE0); //Enable overflow interrupt
 	
 	//8-bit timer 2
 	TCCR2  |= (1<<WGM20)|(1<<WGM21)|(1<<COM21); //Fast PWM, non-inverting mode
 	
 	DDRB   |= 0x08; //Set third output pin (PB3)
 	PORTB  &=~0x08; //Unset the port bit
+	
+	//TEST code
+	enable_timer2();
+	//END
 	
 	//sync timers
 	update_timers();
@@ -118,28 +124,57 @@ void set_channels(uint16_t c0, uint16_t c1, uint16_t c2){
 	update_timers();
 }
 
+void set_channels_direct(uint16_t c0, uint16_t c1, uint16_t c2){
+	//channel 0
+	OCR1A = c0;
+	//channel 1
+	OCR1B = c1;
+	//channel 2
+	c16 tmp;
+	tmp.i16 = c2;
+	OCR2 = tmp.i8h;
+	timer0_pwm_high = tmp.i8l;
+	//update.
+	update_timers();
+}
+
 int main(void){
 	//Well, eh, do something cool!
 	DDRC |= 0x01;
 	init_pwm();
 	while(1){
-		set_channels(0, 0, 0);
-		_delay_ms(1000);
+		/*for(uint16_t i=0; i<0xFFFF; i+=16){
+		set_channels_direct(0xFFFF-i, i, 0);_delay_ms(10);}
+		for(uint16_t i=0; i<0xFFFF; i+=16){
+		set_channels_direct(0,0xFFFF-i,i);_delay_ms(10);}
+		for(uint16_t i=0; i< 0xFFFF; i+=16){
+		set_channels_direct(i,0,0xFFFF-i);_delay_ms(10);}*/
+		//_delay_ms(333);
+		//set_channels_direct(0xFFFF, 0xFFFF, 0xFFFF);
+		set_channels_direct(0xFFFF, 0xFFFF, 0);
+		_delay_ms(333);
+		set_channels_direct(0, 0xFFFF, 0);
+		_delay_ms(333);
+		set_channels_direct(0, 0xFFFF, 0xFFFF);
+		_delay_ms(333);
+		set_channels_direct(0, 0, 0xFFFF);
+		_delay_ms(333);
+		set_channels_direct(0xFFFF, 0, 0xFFFF);
+		_delay_ms(333);
+		/*_delay_ms(100);
 		set_channels(0xFFF, 0xFFF, 0xFFF);
-		_delay_ms(1000);
+		_delay_ms(100);
 		set_channels(0x888, 0x888, 0x888);
-		_delay_ms(1000);
-		set_channels(0xFFF, 0, 0);
-		_delay_ms(1000);
-		set_channels(0, 0xFFF, 0);
-		_delay_ms(1000);
-		set_channels(0, 0, 0xFFF);
-		_delay_ms(1000);
-		set_channels(0xFFF, 0xFFF, 0);
-		_delay_ms(1000);
+		_delay_ms(100);*/
+		/*for(uint16_t i=0; i<256; i++){
+			set_channels(i, i, i);
+			_delay_ms(10);
+		}*/
+		/*set_channels(0xFFF, 0xFFF, 0);
+		_delay_ms(100);
 		set_channels(0, 0xFFF, 0xFFF);
-		_delay_ms(1000);
+		_delay_ms(100);
 		set_channels(0xFFF, 0, 0xFFF);
-		_delay_ms(1000);
+		_delay_ms(100);*/
 	}
 }
