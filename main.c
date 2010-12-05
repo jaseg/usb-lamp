@@ -161,6 +161,8 @@ int main(void){
 		_delay_ms(333);
 		set_channels_direct(0xFFFF, 0, 0xFFFF);
 		_delay_ms(333);
+		set_channels_direct(0xFFFF, 0, 0);
+		_delay_ms(333);
 		/*_delay_ms(100);
 		set_channels(0xFFF, 0xFFF, 0xFFF);
 		_delay_ms(100);
