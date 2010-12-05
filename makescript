@@ -1,0 +1,4 @@
+#!/bin/bash
+make &&
+scp main.hex ubuntunutzer@192.168.0.81:~/jaseg/main.hex &&
+ssh ubuntunutzer@192.168.0.81 'cd jaseg; avrdude -p m8 -c stk500 -P /dev/ttyS0 -U main.hex'
