@@ -16,7 +16,7 @@
 
 SRC = opendevice.c main.c
 TARGET = rgbulb
-CFLAGS = -lusb -Wall -std=gnu99
+CFLAGS = -lusb -lm -Wall -std=gnu99
 
 all: clean $(TARGET)
 
