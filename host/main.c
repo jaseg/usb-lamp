@@ -61,7 +61,7 @@ short get_queue_length(usb_dev_handle* rgbulb){
 }
 
 void usage(){
-	printf("Usage: rgbulb [-f speed] r g b\n");
+	printf("Usage: rgbulb [-f speed] r g b\n(where r, g and b are values between 0 and 65535)\n");
 }
 
 int main(int argc, char** argv)
@@ -96,6 +96,10 @@ int main(int argc, char** argv)
 			exit(2);
 		} else if(val > 0xFFFF){
 			printf("Color value too large.\n");
+			usage();
+			exit(2);
+		}else if(val < 0){
+			printf("Color value too small.\n");
 			usage();
 			exit(2);
 		}
