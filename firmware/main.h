@@ -29,25 +29,12 @@
 #define BUFFER_SIZE	32
 
 void init_pwm(void);
-void set_channels_direct(uint16_t c0, uint16_t c1, uint16_t c2);
 
-typedef struct {
-	uint16_t r;
-	uint16_t g;
-	uint16_t b;
-} precision_color;
-
-precision_color color_buffer[BUFFER_SIZE];
-precision_color* read_pointer=color_buffer;
-precision_color* write_pointer=color_buffer;
-uint8_t queue_length;
-
-typedef union {
-	uint16_t i16;
-	struct {
-		uint8_t i8l;
-		uint8_t i8h;
-	};
-} c16;
+color color_buffer[BUFFER_SIZE];
+color* read_pointer=color_buffer;
+color* write_pointer=color_buffer;
+volatile statestruct state_for_transmission = {1, {0, 0, 0}};
+unsigned char rx_pos;
+unsigned char queue_length;
 
 #endif//__MAIN_H__

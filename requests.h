@@ -17,12 +17,17 @@
 
 //Request ids
 #define LAMP_REQ_SET_LED	1
+#define LAMP_REQ_PUSH_LED	4
 //For powering on and powering off
 #define LAMP_REQ_POWER		2
 #define LAMP_REQ_STATE		3
 
 typedef struct {
-	uint8_t poweron;
-	uint16_t r, g, b;
+	unsigned short r, g, b;
+} color;
+
+typedef struct {
+	unsigned char poweron;
+	color c;
 } statestruct;
 

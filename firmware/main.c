@@ -19,18 +19,9 @@
 *
 */
 
-/* Notes
- * 
- * PC0 has a high-active led connected to it which signalises errors.
- */
-
 #include "main.h"
 #include <avr/interrupt.h>
 #include <util/delay.h>
-
-volatile uint8_t fadestate_recv_cnt;
-volatile uint8_t fadestate_algo;
-volatile statestruct state_for_transmission = {1, 0, 0, 0};
 
 void init_pwm(){
 	//16-bit timer 1
@@ -42,11 +33,13 @@ void init_pwm(){
 }
 
 ISR(TIMER1_OVF_vect){
+	TCCR1B &= ~(1<<CS10);
 	OCR1A=read_pointer->r;
 	OCR1B=read_pointer->g;
 	OCR1C=read_pointer->b;
 	TCNT1=0;
-	precision_color* tmp=read_pointer+1;
+	TCCR1B |= (1<<CS10);
+	color* tmp=read_pointer+1;
 	if(tmp>color_buffer+BUFFER_SIZE){
 		tmp=color_buffer;
 	}
@@ -54,43 +47,77 @@ ISR(TIMER1_OVF_vect){
 		read_pointer = tmp;
 	}
 	queue_length = write_pointer-read_pointer;
-	usbSetInterrupt(&queue_length, sizeof(queue_length));
+	usbSetInterrupt(&queue_length, 1);
 }
 
+short int val;
 
 usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
 	usbRequest_t* rq = (usbRequest_t*) data;
-	precision_color* tmp = write_pointer+1;
+	usbMsgPtr = 0;
 	switch(rq->bRequest){
 		case LAMP_REQ_SET_LED:
+			write_pointer += 1;
+			if(write_pointer>color_buffer+BUFFER_SIZE){
+				write_pointer=color_buffer;
+			}
+			rx_pos = 0;
+			//TEST CODE
+			write_pointer->r = 0;
+			write_pointer->g = val;
+			write_pointer->b = 0;
+			val ^= 0xFFFF;
+			color* tmp = write_pointer+1;
 			if(tmp>color_buffer+BUFFER_SIZE){
 				tmp=color_buffer;
 			}
-			if(tmp != read_pointer){
-				write_pointer->r = rq->wValue.word;
-				write_pointer->g = rq->wIndex.word;
-				write_pointer->b = rq->wLength.word;
-				write_pointer=tmp;
+			write_pointer = tmp;
+
+			return USB_NO_MSG;
+		case LAMP_REQ_PUSH_LED:
+			if(write_pointer != read_pointer){
+				rx_pos = 0;
+				return USB_NO_MSG;
 			}
 			break;
 		case LAMP_REQ_POWER:
 			//Ignored (for now)
 			break;
 		case LAMP_REQ_STATE:
-			state_for_transmission.r=OCR1A;
-			state_for_transmission.g=OCR1B;
-			state_for_transmission.b=OCR1C;
+			state_for_transmission.c.r=OCR1A;
+			state_for_transmission.c.g=OCR1B;
+			state_for_transmission.c.b=OCR1C;
 			usbMsgPtr=(unsigned char*)&state_for_transmission;
-			return sizeof(state_for_transmission);
+			return sizeof(statestruct);
 	}
-	return USB_NO_MSG; //Is this correct? FIXME
+	return 0;
+}
+
+usbMsgLen_t usbFunctionWrite(unsigned char *data, unsigned char length){
+	/*for(unsigned char i=0; i<length; i++){
+		((char*)write_pointer)[rx_pos+i] = data[i];
+	}*/
+	rx_pos += length;
+	if(rx_pos >= sizeof(color)){
+		//Transmission finished.
+		/*color* tmp = write_pointer+1;
+		if(tmp>color_buffer+BUFFER_SIZE){
+			tmp=color_buffer;
+		}
+		write_pointer = tmp;*/
+		return 1;
+	}
+	return 1;
 }
 
 int main(void){
 	//Well, ahem, do something cool!
 	init_pwm();
 	usbInit();
+	usbDeviceDisconnect();
+	_delay_ms(100);
+	usbDeviceConnect();
 	sei();
 	while(1){
 		usbPoll();
